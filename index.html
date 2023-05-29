@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Modelo de predicción</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.13.0"></script>
+</head>
+<body>
+  <h1>Modelo de predicción</h1>
+  
+  <input type="text" id="urlInput" placeholder="Ingrese la URL de la imagen">
+  <button onclick="realizarPrediccion()">Enviar</button>
+  
+  <div id="resultadoPrediccion"></div>
+
+  <script>
+    async function cargarModelo() {
+      // Cargar el modelo desde los archivos .bin y .json
+      const modelo = await tf.loadLayersModel('model.json');
+      return modelo;
+    }
+
+    async function predecirImagen(url) {
+      const img = new Image();
+      img.src = url;
+      await img.decode();
+      
+      const tensor = tf.browser.fromPixels(img).expandDims(0);
+      const tensorNormalizado = tensor.div(255.0);
+      
+      const modelo = await cargarModelo();
+      const prediccion = await modelo.predict(tensorNormalizado).data();
+      
+      const resultado = Array.from(prediccion);
+      const maximoValor = Math.max(...resultado);
+      const indiceMaximoValor = resultado.indexOf(maximoValor);
+      
+      const clases = ['auriculares', 'bicicletas', 'botellas', 'camaras', 'camas', 'coches', 'computadores', 'cuadernos', 'esferos', 'gafas', 'joyas', 'llaveros', 'mesas', 'tazas', 'telefonos', 'zapatos']; // Reemplaza con las clases reales de tu modelo
+      
+      const resultadoFinal = `Predicción: ${clases[indiceMaximoValor]} (Confianza: ${maximoValor.toFixed(4)})`;
+      
+      document.getElementById('resultadoPrediccion').textContent = resultadoFinal;
+    }
+
+    function realizarPrediccion() {
+      const url = document.getElementById('urlInput').value;
+      predecirImagen(url);
+    }
+  </script>
+</body>
+</html>
